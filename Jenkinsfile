@@ -5,6 +5,12 @@ pipeline {
         APP_REPO_NAME= "bestcloud/spring-boot-app"
     }
     stages {
+        stage('Build Docker Compile image') {
+            steps {
+                sh 'docker run --rm -v $HOME/.m2:/root/.m2 -v $WORKSPACE:/app -w /app maven:3.6.3-openjdk-8 mvn clean package'
+                sh 'docker image ls'
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 sh 'docker build --force-rm -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" .'
