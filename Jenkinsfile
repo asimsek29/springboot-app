@@ -1,8 +1,13 @@
 pipeline {
     agent { label "master" }
     environment {
+        PATH=sh(script:"echo $PATH:/usr/local/bin", returnStdout:true).trim()
+        APP_NAME="springboot"
+        AWS_REGION="us-east-1"
+        AWS_ACCOUNT_ID=sh(script:'export PATH="$PATH:/usr/local/bin" && aws sts get-caller-identity --query Account --output text', returnStdout:true).trim()
         ECR_REGISTRY = "370639238640.dkr.ecr.us-east-1.amazonaws.com"
         APP_REPO_NAME= "bestcloud/spring-boot-app"
+        
     }
     stages {
         stage('Build Docker Image') {
