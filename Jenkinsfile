@@ -3,6 +3,7 @@ pipeline {
     environment {
         ECR_REGISTRY = "370639238640.dkr.ecr.us-east-1.amazonaws.com"
         APP_REPO_NAME= "bestcloud/spring-boot-app"
+        PATH="/usr/local/bin/:${env.PATH}"
     }
     stages {
         stage('Build Docker Compile image') {
