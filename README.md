@@ -7,7 +7,7 @@ Prepare development server manually on Amazon Linux 2 for developers, enabled wi
 ``` bash
 #! /bin/bash
 yum update -y
-hostnamectl set-hostname petclinic-dev-server
+hostnamectl set-hostname springboot-app-server
 amazon-linux-extras install docker -y
 systemctl start docker
 systemctl enable docker
@@ -41,26 +41,10 @@ git push origin main
 ```
 ## Check the Maven Build Setup
 
-* Test the compiled source code.
+* Prepare a script to build the docker images then Build Docker Compile image : Take the compiled code and package it in its distributable `JAR` format.
 
-``` bash
-./mvnw clean test
-```
-> Note: If you get `permission denied` error, try to give execution permission to **mvnw**.  
 ```bash
-    chmod +x mvnw
-```  
-
-* Take the compiled code and package it in its distributable `JAR` format.
-
-``` bash
-./mvnw clean package
-```
-
-* Install distributable `JAR`s into local repository.
-
-``` bash
-./mvnw clean install
+docker run --rm -v $HOME/.m2:/root/.m2 -v /home/ec2-user/springboot/:/app -w /app maven:3.6.3-openjdk-8 mvn clean package
 ```
 
 * Prepare a Dockerfile
@@ -70,12 +54,6 @@ FROM openjdk:8-jre
 ADD ./target/*.jar /app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
 ``` 
-
-* Prepare a script to build the docker images then Build Docker Compile image
-
-```bash
-docker run --rm -v $HOME/.m2:/root/.m2 -v /home/ec2-user/springboot/:/app -w /app maven:3.6.3-openjdk-8 mvn clean package
-```
 
 # Run docker image build
 
@@ -145,7 +123,7 @@ $ sudo mv /tmp/eksctl /usr/local/bin
 $ eksctl version
 ```
 
-## Part 2 - Creating the Kubernetes Cluster on EKS
+## Creating the Kubernetes Cluster on EKS
 
 - If needed create ssh-key with commnad `ssh-keygen -f ~/.ssh/id_rsa`
 
@@ -161,13 +139,7 @@ $ aws configure
 $ eksctl create cluster --region us-east-1 --node-type t2.medium --nodes 1 --nodes-min 1 --nodes-max 2 --node-volume-size 8 --name mycluster
 ```
 
-- Explain the default values and pay attention that default value for node-type is m5.large.
-
-```bash
-$ eksctl create cluster --help
-```
-
-- Create a springboot-deployment.yaml and input text below. Pay attention that image version is 1.0.
+- Create a springboot-deployment.yaml and input text below. 
 
 ```yaml
 apiVersion: apps/v1
@@ -255,8 +227,62 @@ kubectl apply -f ingress-service.yaml
 
 kubectl get ingress
 
+
+# Prepare a Jenkinsfile for pipeline 
+```
+pipeline {
+    agent { label "master" }
+    environment {
+        ECR_REGISTRY = "370639238640.dkr.ecr.us-east-1.amazonaws.com"
+        APP_REPO_NAME= "bestcloud/spring-boot-app"
+        PATH="/usr/local/bin/:${env.PATH}"
+    }
+    stages {
+        stage('Build Docker Compile image') {
+            steps {
+                sh 'docker run --rm -v $HOME/.m2:/root/.m2 -v $WORKSPACE:/app -w /app maven:3.6.3-openjdk-8 mvn clean package'
+                sh 'docker image ls'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build --force-rm -t "$ECR_REGISTRY/$APP_REPO_NAME:latest" .'
+                sh 'docker image ls'
+            }
+        }
+        stage('Push Image to ECR Repo') {
+            steps {
+                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
+                sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
+                sh 'docker pull "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
+                // sh 'docker run -dp 80:8080 "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
+                sh 'kubectl apply -f .'
+
+            }
+        }
+
+    }
+    post {
+        always {
+            echo 'Deleting all local images'
+            sh 'docker image prune -af'
+        }
+    }
+}
+
+```
+# Blue-green deployment
+
+
 ```bash
 $ eksctl get cluster
 NAME            REGION
 mycluster       us-east-2
 $ eksctl delete cluster mycluster
+
+```
