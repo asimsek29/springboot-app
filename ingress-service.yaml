@@ -13,5 +13,5 @@ spec:
           - path: /?(.*)
             backend:
               serviceName: springboot-svc
-              servicePort: 3000
+              servicePort: 8080
           

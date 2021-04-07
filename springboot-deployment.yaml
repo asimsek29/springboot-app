@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: springboot-app
-        image: profizikci29/springboot-app
+        image: 370639238640.dkr.ecr.us-east-1.amazonaws.com/bestcloud/spring-boot-app:latest
         ports:
         - containerPort: 8080
