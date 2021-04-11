@@ -41,5 +41,8 @@ pipeline {
             echo 'Deleting all local images'
             sh 'docker image prune -af'
         }
+        cleanup { 
+            deleteDir()
+        }
     }
 }
