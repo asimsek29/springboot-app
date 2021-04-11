@@ -17,5 +17,6 @@ spec:
       containers:
       - name: springboot-app-v2
         image: 370639238640.dkr.ecr.us-east-1.amazonaws.com/bestcloud/spring-boot-app:v2
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
