@@ -14,7 +14,7 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build --force-rm -t "$ECR_REGISTRY/$APP_REPO_NAME:v2" .'
+                sh 'docker build --force-rm -t "$ECR_REGISTRY/$APP_REPO_NAME:v2" ./springboot-app-v2'
                 sh 'docker image ls'
             }
         }
