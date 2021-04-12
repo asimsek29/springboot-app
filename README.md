@@ -1,4 +1,4 @@
-# # Project: dummy-spring-boot
+### Project: dummy-spring-boot
 
 This project aims to create full CI/CD Pipeline for microservice based applications using [dummy-spring-boot](https://gitlab.com/bcfmkubilay/dummy-spring-boot.git). Jenkins Server deployed on Elastic Compute Cloud (EC2) Instance is used as CI/CD Server to build pipelines.
 
