@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
                 sh 'docker pull "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
-                sh 'kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.35.0/deploy/static/provider/aws/deploy.yaml '
+                // sh 'kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.35.0/deploy/static/provider/aws/deploy.yaml '
                 // sh 'docker run -dp 80:8080 "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
                 sh 'kubectl apply -f .'
 
